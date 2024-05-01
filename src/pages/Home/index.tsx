@@ -1,39 +1,61 @@
-import preactLogo from '../../assets/preact.svg';
-import './style.css';
+import { useEffect, useState, useCallback } from "preact/hooks";
+import debounce from "lodash.debounce";
+import { marked } from "marked";
+import DOMPurify from "DOMPurify";
 
 export function Home() {
-	return (
-		<div class="home">
-			<a href="https://preactjs.com" target="_blank">
-				<img src={preactLogo} alt="Preact logo" height="160" width="160" />
-			</a>
-			<h1>Get Started building Vite-powered Preact Apps </h1>
-			<section>
-				<Resource
-					title="Learn Preact"
-					description="If you're new to Preact, try the interactive tutorial to learn important concepts"
-					href="https://preactjs.com/tutorial"
-				/>
-				<Resource
-					title="Differences to React"
-					description="If you're coming from React, you may want to check out our docs to see where Preact differs"
-					href="https://preactjs.com/guide/v10/differences-to-react"
-				/>
-				<Resource
-					title="Learn Vite"
-					description="To learn more about Vite and how you can customize it to fit your needs, take a look at their excellent documentation"
-					href="https://vitejs.dev"
-				/>
-			</section>
-		</div>
-	);
-}
+  const [url, setURL] = useState<string>();
+  const [content, setContent] = useState<string>();
 
-function Resource(props) {
-	return (
-		<a href={props.href} target="_blank" class="resource">
-			<h2>{props.title}</h2>
-			<p>{props.description}</p>
-		</a>
-	);
+  const handleInput = useCallback(
+    debounce((event: Event) => {
+      if (event.target instanceof HTMLInputElement) {
+        setURL(event.target.value);
+      }
+    }, 500),
+    []
+  );
+
+  const fetchDocument = async () => {
+    if (!url) return;
+    const response = await fetch(url);
+    const documentText = await response.text();
+    setContent(await marked.parse(documentText));
+
+    const raw = DOMPurify.sanitize(marked.parse(documentText, { gfm: true }));
+    setContent(raw);
+  };
+
+  useEffect(() => {
+    fetchDocument();
+  }, [url]);
+
+  return (
+    <section class="text-gray-600 body-font">
+      <div class="container mx-auto flex px-5 py-24 md:flex-row flex-col items-center">
+        <div class="lg:flex-grow flex flex-col md:items-start md:text-left mb-16 md:mb-0 items-center text-center">
+          <div class="relative w-full mb-10">
+            <label for="contentAddress" class="leading-7 text-sm text-gray-600">
+              Enter content address
+            </label>
+
+            <input
+              type="text"
+              id="contentAddress"
+              name="contentAddress"
+              onInput={handleInput}
+              class="w-full bg-white rounded border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 text-base outline-none text-gray-700 py-1 px-3 leading-8 transition-colors duration-200 ease-in-out"
+            />
+          </div>
+
+          {content && (
+            <div
+              class="flex flex-col w-full mb-12"
+              dangerouslySetInnerHTML={{ __html: content }}
+            />
+          )}
+        </div>
+      </div>
+    </section>
+  );
 }
