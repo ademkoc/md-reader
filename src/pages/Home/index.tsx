@@ -1,7 +1,12 @@
-import { useEffect, useState, useCallback } from "preact/hooks";
+import DOMPurify from "DOMPurify";
+import hljs from "highlight.js";
+import "highlight.js/styles/github-dark.css";
 import debounce from "lodash.debounce";
 import { marked } from "marked";
-import DOMPurify from "DOMPurify";
+import { gfmHeadingId } from "marked-gfm-heading-id";
+import { useCallback, useEffect, useState } from "preact/hooks";
+
+marked.use(gfmHeadingId());
 
 export function Home() {
   const [url, setURL] = useState<string>();
@@ -27,35 +32,31 @@ export function Home() {
   };
 
   useEffect(() => {
+    hljs.highlightAll();
+  }, []);
+
+  useEffect(() => {
     fetchDocument();
   }, [url]);
 
   return (
-    <section class="text-gray-600 body-font">
-      <div class="container mx-auto flex px-5 py-24 md:flex-row flex-col items-center">
-        <div class="lg:flex-grow flex flex-col md:items-start md:text-left mb-16 md:mb-0 items-center text-center">
-          <div class="relative w-full mb-10">
-            <label for="contentAddress" class="leading-7 text-sm text-gray-600">
-              Enter content address
-            </label>
+    <div>
+      <label for="contentAddress">Enter content address</label>
 
-            <input
-              type="text"
-              id="contentAddress"
-              name="contentAddress"
-              onInput={handleInput}
-              class="w-full bg-white rounded border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 text-base outline-none text-gray-700 py-1 px-3 leading-8 transition-colors duration-200 ease-in-out"
-            />
-          </div>
+      <input
+        type="text"
+        id="contentAddress"
+        name="contentAddress"
+        onInput={handleInput}
+      />
 
-          {content && (
-            <div
-              class="flex flex-col w-full mb-12"
-              dangerouslySetInnerHTML={{ __html: content }}
-            />
-          )}
-        </div>
-      </div>
-    </section>
+      {content && (
+        <div
+          id="_html"
+          class="markdown-body"
+          dangerouslySetInnerHTML={{ __html: content }}
+        />
+      )}
+    </div>
   );
 }
