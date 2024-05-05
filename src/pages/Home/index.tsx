@@ -1,4 +1,4 @@
-import DOMPurify from "DOMPurify";
+import DOMPurify from "dompurify";
 import hljs from "highlight.js";
 import "highlight.js/styles/github-dark.css";
 import debounce from "lodash.debounce";
